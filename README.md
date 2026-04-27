@@ -39,7 +39,7 @@ The hashing process follows a "Confuse and Diffuse" architecture:
 
 ```bash
 # Not yet available on PyPI
-git clone https://github.com/hazzorgod/xhash512.git
+git clone https://github.com/fyllus/xhash512.git
 cd xhash512
 pip install .
 ```
@@ -52,7 +52,7 @@ pip install .
 from xhash512 import xh512
 
 # Simple hashing
-data = b"Hello, Vault!"
+data = b"Hello, There"
 result = xh512(data)
 
 print(f"Hash: {result}")
