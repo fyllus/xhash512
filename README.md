@@ -1,7 +1,7 @@
 # xHash512
 
 **Version:** 0.1.0-alpha (Experimental)  
-**Author:** hazzorgod  
+**Author:** fyllus
 **License:** MIT
 
 `xHash512` is an experimental non-standard hashing library designed for high-entropy unique identification and obfuscation. It produces a 64-character fixed-length string (512 bits) using a multi-stage process of diffusion, bitwise rotation, and dynamic encoding.
