@@ -1,0 +1,11 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xhash512"
+version = "0.1.0"
+description = "A custom 512-bit hash with dynamic base64 encoding"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
