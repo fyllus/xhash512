@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from xbase64 import XBase64
+from .xbase64 import XBase64
 
 def xh512(data: bytes) -> bytes:
     """
