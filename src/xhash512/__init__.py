@@ -6,5 +6,5 @@ from .xbase64 import XBase64
 __pname__ = "xhash512"
 __author__ = "Fyllus(Geliardi D. Oliveira)"
 
-__version__ = "0.2.0-alpha"
+__version__ = "0.2.0-beta"
 __all__ = ["xh512", "XBase64"]

@@ -1,6 +1,6 @@
 # xHash512
 
-**Version:** 0.2.0 (Experimental)
+**Version:** 0.2.1-beta (Experimental)
 **Author:** fyllus
 **License:** MIT
 
