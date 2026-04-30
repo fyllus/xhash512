@@ -1,7 +1,4 @@
 # xHash512
-**EXPERIMENTAL:**
-
----
 
 **Version:** 0.3.0-stable
 **Author:** fyllus
