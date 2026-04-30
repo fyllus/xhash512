@@ -40,8 +40,7 @@
 # 🚀 Installation
 
 ```bash
-git clone https://github.com/fyllus/xhash512.git
-cd xhash512
+git clone https://github.com/fyllus/xhash512.git && cd xhash512
 pip install .
 ```
 
