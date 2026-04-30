@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 from functools import total_ordering
 from .xbase64 import XBase64
-from . import tools
-
-MODS = [ tools.mdl1, tools.mdl2, tools.mdl3, tools.mdl5, tools.mdl5]
+from .tools import __MODS__ as MODS
 
 def deterministic_shuffle(tokens: bytearray, data: bytes) -> bytearray:
     """ Simple token deterministic shuffle based on data"""
@@ -15,7 +13,6 @@ def deterministic_shuffle(tokens: bytearray, data: bytes) -> bytearray:
         tokens[a], tokens[b] = tokens[b], tokens[a]
 
     return tokens
-
 
 def bidirectional_diffusion(tokens: bytearray, data: bytes) -> bytearray:
     """Bidirectional diffusion for avalanche effect"""
