@@ -1,15 +1,13 @@
 # xHash512
+**EXPERIMENTAL:**
+
+---
 
 **Version:** 0.3.0-stable
 **Author:** fyllus
 **License:** MIT
 
 `xHash512` is an experimental, non-standard hashing library designed for high-entropy unique identification and data obfuscation. It generates a 512-bit (64-character) fixed-length digest through a multi-stage pipeline of bidirectional diffusion, non-linear bit rotation, and dynamic alphabet encoding.
-
----
-
-**EXPERIMENTAL:**
-* Do not use it as a replacement for industry standards (like SHA-256/512) in high-security production environments.
 
 ---
 
@@ -99,4 +97,4 @@ print(f"Hash: {result.decode()}")
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-> **Disclaimer:** This project is for educational purposes. The developer is not responsible for any misuse or security vulnerabilities arising from the use of this experimental software. It has not undergone formal cryptographic auditing. It is intended for research, identification, or personal projects.
+> **Disclaimer:** This project is for educational purposes. The developer is not responsible for any misuse or security vulnerabilities arising from the use of this experimental software. It has not undergone formal cryptographic auditing. It is intended for research, identification, or personal projects. Do not use it as a replacement for industry standards (like SHA-256/512) in high-security production environments.
