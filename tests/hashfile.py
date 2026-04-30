@@ -3,6 +3,21 @@ from xhash512 import XHash
 import time
 import sys, os
 
+def integrity16bit():
+    hasher = XHash(mods=2)
+    hashes = set()
+
+    # Range completo de 0 a 65535
+    for i in range(65536):
+        data = i.to_bytes(2, 'big')
+        h = hasher.xh512(data)
+
+        if h in hashes:
+            return f"FAIL at {i} ({data.hex()})"
+        hashes.add(h)
+
+    return "CERTIFIED: 100% Unique Mapping"
+
 def random_collision(count=100_000, mods=2):
     xhash = XHash(mods)
     hashes = set()
@@ -95,8 +110,8 @@ if __name__ == '__main__':
             except ValueError:
                 target = 100_000
             random_collision(target)
-        case _:
-            pass
+        case '16bit':
+            print(integrity16bit())
 
 
 

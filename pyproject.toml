@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xhash512"
-version = "0.2.1-beta"
+version = "0.3.0-stable"
 description = "A custom 512-bit hash with dynamic base64 encoding"
 readme = "README.md"
 requires-python = ">=3.8"

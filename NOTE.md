@@ -28,3 +28,42 @@
 *   Refactor `XBase64` to support dynamic alphabet shuffling based on the internal 512-bit state.
 *   Implement `__call__` dunder method in `XHash` for a more Pythonic API usage (e.g., `hasher(data)`).
 *   Finalize the `tools.py` suite with the 5 optimized MDL functions.
+
+
+
+
+
+
+# STRATEGY
+
+## 1. 512-Byte Derivation (4 Stages)
+*   **1.1 - Deterministic Derivator**: Initial 512-byte state generation utilizing MDL (Modifier) layers.
+*   **1.2 - Deterministic Shuffle**: Implementation of the Fisher-Yates algorithm tied to input entropy.
+*   **1.3 - Deep Bidirectional Diffusion**: Dual-pass diffusion layer ensuring full avalanche effect across the state.
+*   **1.4 - Jump-mix with Bit Rotation**: Non-linear bitwise rotation and index jumping to break mathematical linearity.
+
+## 2. 64-Byte Compression
+*   **2.1 - Targeted Derivation**: Re-derivation of the 512-byte state into a concentrated 64-byte block using MDL layers.
+*   **2.2 - Advanced Dispersion**: Chained XOR operations, RNG-driven jumps, and 4-bit rotations for maximum byte-level entropy.
+
+## 3. Dynamic Base64 Final Phase (62 Chars + "-+")
+*   **3.1 - Dynamic Alphabet Generation**: Alphabet shuffling with depth cycles of up to 256 iterations.
+*   **3.2 - Final Mapping**: Character selection via `byte % len(alphabet)` mapping for the final output string.
+
+---
+# IMPORTANT
+
+## 1. About the Alphabet
+*   **1.1 - Generation**: Built using variable `step` cycles and a deterministic `seed`.
+*   **1.2 - Nature**: The alphabet is fully dynamic yet strictly deterministic based on the provided seed.
+*   **1.3 - Lookup Basis**: The construction follows a structured sequence pool:
+    *   `0-9`: '0123456789'
+    *   `a-f`: 'abcdef'
+    *   `g-z`: 'ghijklmnopqrstuvwxyz'
+    *   `special`: '-+'
+
+## 2. Technical Considerations
+By processing data through these interconnected stages, the entropy levels become massive. Every component—the dynamic alphabet, the 512-byte state, the 64-byte compressed block, and the final translation—is tightly coupled and extremely sensitive to input variations.
+
+## 3. Expected Result
+A unique, high-dispersion 512-bit (64-character) hash sequence.
