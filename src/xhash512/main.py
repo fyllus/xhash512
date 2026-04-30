@@ -9,8 +9,6 @@ import sys, os, argparse
 """
 To future
 """
-
-
 def random_collision(count=100_000, mods=2):
     xhash = XHash(mods)
     hashes = set()
