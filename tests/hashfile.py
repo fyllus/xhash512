@@ -81,11 +81,6 @@ def file_collision(filename, mods):
     except Exception as e:
         print(f"[-] Error: {e}")
 
-
-
-
-
-
 if __name__ == '__main__':
     args = sys.argv[1:]
     if not args:

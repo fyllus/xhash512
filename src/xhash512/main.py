@@ -6,6 +6,11 @@ from .xbase64 import XBase64
 import time
 import sys, os, argparse
 
+"""
+To future
+"""
+
+
 def random_collision(count=100_000, mods=2):
     xhash = XHash(mods)
     hashes = set()
@@ -83,30 +88,3 @@ def file_collision(filename, mods):
 
     except Exception as e:
         print(f"[-] Error: {e}")
-"""
-principal:
-
---xbase64
---xhash512
---collision
-
---xbase64:
-    seed (obrigartorio)
-    --rng
-
-    --seed
-
-    --base:
-        base (obrigatorio)
-        steps (opicional)
-
---xhash512:
-    --mods
-    --data
---collision:
-    --file:
-        name
-    --random
-
-
-"""
