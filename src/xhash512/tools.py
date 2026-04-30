@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+
+def modifier(data, mod):
+    size = len(data)
+
+
+
 class MODFIERS:
 
     @staticmethod
