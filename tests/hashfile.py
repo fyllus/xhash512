@@ -26,7 +26,7 @@ def random_collision(count=100_000, mods=2):
     try:
         while len(hashes) != count:
             data = (len(hashes) + 1).to_bytes(4, 'big') + os.urandom(16)
-            hash = xhash.xh512(data).decode()
+            hash = xhash.xh512(data)
             if hash in hashes:
                 print(f"\n[!] COLLISION at sample {hash}")
                 print(f"Input: {data}")
@@ -97,6 +97,10 @@ def file_collision(filename, mods):
         print(f"[-] Error: {e}")
 
 if __name__ == '__main__':
+
+    start = time.time()
+    print(XHash().xh512(b'Tekjngnkdjgkfjngkjngkjfg'))
+    print(f"Time: {time.time() - start}")
     args = sys.argv[1:]
     if not args:
         sys.exit(0)
