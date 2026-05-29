@@ -1,6 +1,6 @@
 # xhash
 
-**Version:** 0.4.0-stable
+**Version:** 0.4.2
 
 **Author:** Fyllus (Geliardi D. Oliveira)
 

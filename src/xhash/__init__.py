@@ -11,7 +11,7 @@ from . import xhashlib
 
 __pname__ = "xhash"
 __author__ = "Fyllus(Geliardi D. Oliveira)"
-__version__ = "0.4.0-stable"
+__version__ = "0.4.2"
 
 __all__ = [
     'xhash512',
