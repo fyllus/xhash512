@@ -1,67 +1,78 @@
 #!/usr/bin/env python3
-from functools import total_ordering
-from .xbase64 import XBase64
-from .tools import jump_fast, spring, shake, PCV
+"""
+xhash main execution module.
+
+Provides explicit cryptographic wrappers for the xhash pipeline,
+supporting output configurations from 64-bit up to 512-bit sizes.
+"""
+
+from .xhashlib import dynamic_tokenize, absorb_tokens, compress_blocks
 
 
-class XHash():
-    def __init__(self, mods: int = 2) -> None:
-        pass
+def xhash_dyna(data, size: int = 64) -> str:
+    """Executes the complete xhash pipeline with a dynamic output size.
 
-    def xh512(self, data):
-        """
-        Generates a 512-bit (64-character) hash using bidirectional diffusion,
-        non-linear bit rotation, and dynamic Base64 encoding.
-        """
-        data = self.validate(data)
-        if len(data) == 0:
-            data = b'\x00'
+    Args:
+        data (str | bytes | int): Raw input data to be digested.
+        size (int): Final output size in bytes. Defaults to 64.
 
-        # Derivate and Deterministic Shuffle (Fisher-Yates) tied to input values
-        b512 = shake(self.spring(data, 512), data)
+    Returns:
+        str: Hexadecimal string representation of the digested data.
+    """
+    tokens = dynamic_tokenize(data=data)
+    mutate = absorb_tokens(tokens=tokens)
+    return compress_blocks(chain_blocks=mutate, output_size=size)
 
-        # Derivation Compression: 512 bytes -> 64 bytes via block mixing
-        b64 = self.spring(bytes(b512), 64)
 
-        rng = XBase64(bytes(b512)).x64_rng() # Re-seed RNG 512-byte state
+def xhash512(data) -> str:
+    """Generates a 512-bit (64-byte) hash digest.
 
-        for i in range(64):
-            block = b512[i*8 : (i+1)*8]
-            acc = rng.randint(0, 255)
-            for b in block:
+    Args:
+        data (str | bytes | int): Raw input data to be digested.
 
-                # Chained XOR with RNG-driven jumps
-                acc = (acc ^ b ^ rng.randint(0, 255)) % 256
+    Returns:
+        str: A 128-character hexadecimal string.
+    """
+    return xhash_dyna(data)
 
-            # Final 4-bit rotation for byte dispersion
-            b64[i] = ((acc << 4) & 0xFF | (acc >> 4)) ^ rng.randint(0, 255)
 
-        return b64.hex()
-        # Final encode using shuffled dynamic alphabet
-        #base = XBase64(bytes(b64))
-        #alphabet = base.x64_base(steps=min(len(data), 256)).decode()
-        #end = []
-        #for value in b64:
-            # Map compressed bytes to the dynamic alphabet
-          #  char = alphabet[value % len(alphabet)]
-         #   end.append(char)
+def xhash256(data) -> str:
+    """Generates a 256-bit (32-byte) hash digest.
 
-        # Reverse and return as bytes for consistency
-        #return ''.join(reversed(end)).encode()
+    Args:
+        data (str | bytes | int): Raw input data to be digested.
 
-    def validate(self, data) -> bytes:
-        if isinstance(data, str):
-            return data.encode()
-        if isinstance(data, (bytes, bytearray)):
-            return bytes(data)
-        if isinstance(data, int):
+    Returns:
+        str: A 64-character hexadecimal string.
+    """
+    return xhash_dyna(data, size=32)
 
-            length = (data.bit_length() + 7) // 8 or 1
-            return data.to_bytes(length, byteorder='big')
 
-        return str(data).encode()
+def xhash128(data) -> str:
+    """Generates a 128-bit (16-byte) hash digest.
 
-    def spring(self, data: bytes, tokens: int):
-        """Simple data byte spring"""
-        return spring(data, tokens)
+    Args:
+        data (str | bytes | int): Raw input data to be digested.
+
+    Returns:
+        str: A 32-character hexadecimal string.
+    """
+    return xhash_dyna(data, size=16)
+
+
+def xhash64(data) -> str:
+    """Generates a 64-bit (8-byte) hash digest.
+
+    Args:
+        data (str | bytes | int): Raw input data to be digested.
+
+    Returns:
+        str: A 16-character hexadecimal string.
+    """
+    return xhash_dyna(data, size=8)
+
+
+if __name__ == '__main__':
+    teste = 'apenas um teste qualquer'
+    print(xhash512(teste))
 

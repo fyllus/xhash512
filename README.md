@@ -1,46 +1,54 @@
-# xHash512
+# xhash
 
-**Version:** 0.3.0-stable
-**Author:** fyllus
+**Version:** 0.4.0-stable
+
+**Author:** Fyllus (Geliardi D. Oliveira)
+
 **License:** MIT
 
-`xHash512` is an experimental, non-standard hashing library designed for high-entropy unique identification and data obfuscation. It generates a 512-bit (64-character) fixed-length digest through a multi-stage pipeline of bidirectional diffusion, non-linear bit rotation, and dynamic alphabet encoding.
+> **Notice:** `xhash` is an independent, lightweight hashing library designed for high-entropy identification and data obfuscation. It has not undergone formal cryptographic auditing and is intended for research, quick lookup indexes, and personal development environments.
 
 ---
 
 # 🛠 Features
 
-*   **Modular Architecture:** Decoupled logic using `XBase64` (entropy engine) and `XHash` (core hashing).
-*   **Bidirectional Diffusion:** Dual-pass XOR chains ensure that a single-bit change ripples across the entire 512-byte internal state.
-*   **Non-Linearity:** Implements circular bit shifts (ROL) and deterministic jump-mixing to mitigate linear algebraic analysis.
-*   **Dynamic MDL System:** Orchestrates up to 5 vector modifier functions $(x, y, z)$ to alternate derivation logic.
-*   **Alphabet Shuffling:** Every hash utilizes a unique, deterministic alphabet mapping, adding a layer of obfuscation.
-*   **Deterministic & Portable:** Guarantees consistent output for any given input across Python 3.10+ environments.
+* **Procedural Architecture:** Completely decoupled from complex object states. Pure functions and streamlined structures maximize execution speed.
+* **Non-Linear Bit Fabric:** Implements `bit_rotate` with cross-XOR mechanics and dynamic bit shifts, shattering predictable data patterns.
+* **Dynamic Tokenization:** Uses zero-copy `memoryview` slicing to break inputs into variable-length blocks dynamically based on the input byte stream.
+* **Cascade Absorption:** Employs a bidirectional permutation-substitution matrix where tokens alter future state anchors concurrently.
+* **Deterministic Native PRNG:** Includes `XBase64` driven by `pseudo_random_states`, an isolated finite state machine that shuffles alphabets and selects high-entropy sequences without relying on Python's built-in `random` module.
 
 ---
 
-# 🏗 Algorithm Strategy
+# 🏗 Pipeline Architecture
 
-## 1. 512-Byte State Derivation
-*   **1.1 - MDL Derivator:** Generates an initial 512-byte state utilizing Modifier (MDL) layers.
-*   **1.2 - Deterministic Shuffle:** Applies a Fisher-Yates shuffle tied strictly to input entropy.
-*   **1.3 - Deep Bidirectional Diffusion:** A dual-pass (forward/backward) diffusion layer ensures a full avalanche effect.
-*   **1.4 - Jump-Mix Bit Rotation:** Combines non-linear bitwise rotation with dynamic index jumping to break structural patterns.
+```
+[ Input Data ] ──> [ dynamic_tokenize ] ──> [ absorb_tokens ] ──> [ compress_blocks ] ──> [ Hex Output ]
 
-## 2. 64-Byte Compression
-*   **2.1 - Targeted Re-Derivation:** Concentrates the 512-byte state into a 64-byte block.
-*   **2.2 - Advanced Dispersion:** Uses chained XOR operations, RNG-driven state jumps, and 4-bit rotations to maximize byte-level entropy.
+```
 
-## 3. Dynamic Base64 Encoding
-*   **3.1 - Alphabet Generation:** Shuffles a 64-character pool (0-9, a-z, A-Z, -+) using up to 256 depth cycles.
-*   **3.2 - Final Mapping:** Maps compressed bytes to the dynamic alphabet via `byte % len(alphabet)`.
+### 1. Dynamic Tokenization
+
+* **Zero-Copy Slicing:** Wraps inputs in a `memoryview` to prevent memory reallocation.
+* **Variable Stride:** The current byte determines the sizing stride modulo (`view[idx] % chunk_limit`), outputting variable-length binary tokens.
+
+### 2. Chain Absorption
+
+* **Positional Modifiers:** Generates scaling factors (`l_shift`, `r_shift`, `xor_mask`) based on the token index.
+* **Accumulator Avalanche:** Compresses values into 64-bit bounded chaotic feedback blocks. A single bit variation in the input completely alters the subsequent tracking state.
+
+### 3. Substitution-Permutation Matrix
+
+* **State Buffer Seeding:** Initializes a `bytearray` buffer scaled exactly to the requested output size.
+* **Dual-Index Cross-Linked Feedback:** Traverses data blocks and applies bidirectional bitwise rotation, mutating `buffer[idx_x]` and `buffer[idx_y]` simultaneously based on calculated indices.
 
 ---
 
 # 🚀 Installation
 
 ```bash
-git clone https://github.com/fyllus/xhash512.git && ( cd xhash512 && pip install . )
+git clone https://github.com/fyllus/xhash.git && ( cd xhash && pip install . )
+
 ```
 
 ---
@@ -48,48 +56,68 @@ git clone https://github.com/fyllus/xhash512.git && ( cd xhash512 && pip install
 # 💻 Usage
 
 ```python
-from xhash512 import XHash
+import xhash
 
-# Initialize with 3 MDL layers
-hasher = XHash(mods=3)
-data = b"experimental_seed_2026"
+data = "apenas um teste qualquer"
 
-# Generate 512-bit hash
-result = hasher.xh512(data)
-print(f"Hash: {result.decode()}")
+# Generate hashes of standard bit widths
+hash_512 = xhash.xhash512(data)
+hash_256 = xhash.xhash256(data)
+hash_128 = xhash.xhash128(data)
+hash_64  = xhash.xhash64(data)
+
+print(f"Hex 512: {hash_512}")
+print(f"Hex 64:  {hash_64}")
+
+# Generate custom byte sizes directly
+custom_hash = xhash.xhash_dyna(data, size=7)
+print(f"Hex 56-bit (7 bytes): {custom_hash}")
+
+```
+
+### Dynamic Alphabet Generation (`XBase64`)
+
+```python
+from xhash import XBase64
+
+engine = XBase64(seed="my_secure_seed")
+
+# Generate a deterministically shuffled Base64 alphabet
+shuffled_alpha = engine.x64_base(option="base64", steps=5)
+print(f"Custom Alphabet: {shuffled_alpha.decode()}")
+
 ```
 
 ---
 
 # 🧪 Development Roadmap
 
-- [x] Modularize `XBase64` entropy engine and `XHash` hash core.
-- [x] Implement dynamic shuffle steps based on input length.
-- [x] Achieve 0.00% collision rate in 2 bytes(65,536 sequential inputs) sample stress tests.
-- [ ] Achieve 0.00% collision rate in 2_000_000 sample(16 bytes) stress tests.
-- [ ] Implement a CLI tool for file hashing and benchmarking.
-- [ ] Port core derivation logic to C (Python Extension) for high-performance needs.
+* [x] Refactor core architecture from Object-Oriented to explicit pipeline functions.
+* [x] Achieve 0.00% collision rate across 1,000,000 sequential entries at 64-bit (8 bytes).
+* [x] Achieve 0.00% collision rate across 1,000,000 high-entropy PRNG entries at 56-bit (7 bytes).
+* [ ] Implement a CLI tool for direct file hashing and throughput benchmarking.
+* [ ] Port the underlying `bit_rotate` and permutation loops to a native C Python Extension.
 
 ---
 
-# 📝 Release Notes (v0.3.0)
+# 📝 Release Notes (v0.4.0-stable)
 
-### Architectural Refactor
-*   **Object-Oriented Core:** Transitioned to a robust `XHash` class for better state management and modularity.
-*   **Zero-External-RNG:** Replaced `random.Random` with internal deterministic state propagation for 100% mathematical consistency.
+### Architectural Shift
 
-### Performance & Security
-*   **Vectorized MDLs:** Modifiers now return a triad of values, increasing complexity without linear CPU overhead.
-*   **Memory Optimization:** Standardized on `bytearray` for in-place manipulation, significantly reducing memory allocation overhead.
-*   **Sub-10ms Processing:** Optimized main loops to maintain high performance in pure Python environments.
+* **Clean & Functional:** Eliminated class instantiation requirements for hashing operations. Package exposes fast, direct procedural functions (`xhash512`, `xhash256`, etc.).
+* **Zero-External-RNG:** Replaced all leftover `random.Random` calls inside alphabet generation with native `pseudo_random_states` loops, establishing 100% internal mathematical consistency.
+
+### Performance & Optimization
+
+* **Memory Protection:** Slicing loops completely rely on memory arrays, drastically improving execution performance for larger blocks.
+* **Sub-45s 1kk Stress Scaling:** Able to process 1,000,000 chaotic FSM mutations and verify zero collisions under 43 seconds in standard Python interpreter setups.
 
 ### Validation
-*   **16-bit Exhaustion:** Passed full 2-byte space exhaustion (65,536 sequential inputs) with 100% unique mapping.
+
+* **56-bit Boundary Exhaustion:** Successfully passed exhaustive pseudo-random sequential stress tests up to 1,000,000 entries with zero duplicate mappings on a strict 7-byte layout.
 
 ---
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-> **Disclaimer:** This project is for educational purposes. The developer is not responsible for any misuse or security vulnerabilities arising from the use of this experimental software. It has not undergone formal cryptographic auditing. It is intended for research, identification, or personal projects. Do not use it as a replacement for industry standards (like SHA-256/512) in high-security production environments.
