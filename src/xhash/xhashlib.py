@@ -8,6 +8,46 @@ and substitution-permutation network for the xhash pipeline.
 
 from collections.abc import Iterator
 
+def bit_mask(value, bits_len=64):
+    """
+    Apply a bit-level mask (1, 3, 7, 15...) in O(1) time complexity.
+
+    Args:
+        value (int): The target integer to be masked.
+        bits_len (int): Number of bits to stack from right to left. Max bound: 64.
+    """
+    bits_len = (bits_len % 65) or 1
+    mask = (1 << bits_len) - 1
+    return value & mask
+
+def nibble_mask(value, amount=16):
+    """
+    Apply a hexadecimal nibble-level mask (0xF, 0xFF, 0xFFF...) in O(1) time complexity.
+
+    Args:
+        value (int): The target integer to be masked.
+        amount (int): Number of 4-bit nibbles to stack. Max bound: 16 (64-bit block).
+    """
+    amount = (amount % 17) or 1
+    mask = (1 << (amount * 4)) - 1
+    return value & mask
+
+def bit_rotate(value: int, position: int = 1, bits: int = 64) -> int:
+    """
+    Apply non-linear bitwise shifts and cross-XOR rotations under a strict 64-bit fabric.
+
+    Args:
+        value (int): Input bits to rotate.
+        position (int): Positional offset applied as a salt during shifts. Defaults to 1.
+        bits (int): Final bit size to clamp the returned value. Defaults to 64.
+
+    Returns:
+        int: Fully diffused and masked integer.
+    """
+    a = nibble_mask(((value << 16) ^ position ^ (value >> 5)), 16)
+    b = nibble_mask(((value << 11) ^ position ^ (value >> 3)), 16)
+    return bit_mask(((a << (b & 0xF)) ^ position ^ (b >> (a & 0xF))), bits)
+
 
 def get_byte_length(value: int) -> int:
     """Calculates the minimal byte length required to represent an integer.
@@ -21,34 +61,19 @@ def get_byte_length(value: int) -> int:
     return (value.bit_length() + 7) // 8 or 1
 
 
-def int_to_bytes(value: int, byteorder: str = 'big') -> bytes:
+def int_to_bytes(value: int, length: int = None, byteorder: str = 'big') -> bytes:
     """Converts an integer into its dense byte representation.
 
     Args:
         value (int): Integer to convert.
+        length (int): Optional explicit byte length.
         byteorder (str): Byte ordering ('big' or 'little'). Defaults to 'big'.
 
     Returns:
         bytes: Raw byte representation.
     """
-    return int.to_bytes(value, length=get_byte_length(value), byteorder=byteorder)
-
-
-def bit_rotate(value: int, position: int = 1, output_mask: int = 0xFFFFFFFFFFFFFFFF) -> int:
-    """Applies non-linear bitwise shifts and cross-XOR rotations under a 64-bit fabric.
-
-    Args:
-        value (int): Input bits to rotate.
-        position (int): Positional offset applied as a salt during shifts. Defaults to 1.
-        output_mask (int): Final bitmask to clamp the returned value. Defaults to 64-bit.
-
-    Returns:
-        int: Fully diffused masked integer.
-    """
-    internal_mask = 0xFFFFFFFFFFFFFFFF
-    a = ((value << 16) ^ position ^ (value >> 5)) & internal_mask
-    b = ((value << 11) ^ position ^ (value >> 3)) & internal_mask
-    return ((a << (b & 0xF)) ^ position ^ (b >> (a & 0xF))) & output_mask
+    len_to_use = length if length is not None else get_byte_length(value)
+    return int.to_bytes(value, length=len_to_use, byteorder=byteorder)
 
 
 def get_mix_modifiers(position: int, value: int) -> tuple[int, int, int]:
@@ -67,7 +92,7 @@ def get_mix_modifiers(position: int, value: int) -> tuple[int, int, int]:
     return l_shift, xor_mask, r_shift
 
 
-def pseudo_random_states(seed: int, size: int = 64, output_mask: int = 0xFF) -> Iterator[tuple[int, int]]:
+def pseudo_random_states(seed: int, size: int = 64, bits: int = 8) -> Iterator[tuple[int, int]]:
     """State-isolated finite state machine PRNG.
 
     Yields high-entropy sequences while protecting the master state from direct exposure.
@@ -75,7 +100,7 @@ def pseudo_random_states(seed: int, size: int = 64, output_mask: int = 0xFF) -> 
     Args:
         seed (int): Initial anchor for the generator state.
         size (int): Number of iterations to perform. Defaults to 64.
-        output_mask (int): Bitmask limit for the emitted node. Defaults to 0xFF.
+        bits (int): Bitmask limit for the emitted node. Defaults to 8 (1 byte).
 
     Yields:
         Iterator[tuple[int, int]]: Index step and the derived pseudo-random integer.
@@ -83,7 +108,7 @@ def pseudo_random_states(seed: int, size: int = 64, output_mask: int = 0xFF) -> 
     counter = 1
     state = bit_rotate(seed)
     while counter < size + 1:
-        derived_node = bit_rotate(state ^ seed, counter, output_mask)
+        derived_node = bit_rotate(value=state ^ seed, position=counter, bits=bits)
         yield counter - 1, derived_node
         state = bit_rotate(state ^ seed, counter)
         counter += 1
@@ -140,11 +165,12 @@ def absorb_tokens(tokens: list[bytes]) -> list[bytes]:
         accumulator = bit_rotate(mixed_state, pos)
 
         if accumulator.bit_length() >= 64:
-            blocks.append(int_to_bytes(accumulator))
+            clamped = bit_mask(accumulator, 64)
+            blocks.append(int_to_bytes(clamped, length=8))
             accumulator = 0
 
     if accumulator > 0:
-        blocks.append(int_to_bytes(accumulator))
+        blocks.append(int_to_bytes(bit_mask(accumulator, 64)))
     return blocks
 
 
@@ -163,7 +189,7 @@ def compress_blocks(chain_blocks: list[bytes], output_size: int = 7) -> str:
     pivot_block = chain_blocks[31 % len(chain_blocks)]
     seed = int.from_bytes(pivot_block, byteorder='big')
 
-    buffer = bytearray(val for _, val in pseudo_random_states(seed, output_size, 0xFF))
+    buffer = bytearray(val for _, val in pseudo_random_states(seed=seed, size=output_size, bits=8))
     buf_len = len(buffer)
 
     byte_counter = 0
@@ -173,8 +199,19 @@ def compress_blocks(chain_blocks: list[bytes], output_size: int = 7) -> str:
             idx_x = (seed ^ int_block ^ byte) % buf_len
             idx_y = int_block % buf_len
 
-            buffer[idx_x] = bit_rotate((buffer[idx_y] ^ byte ^ idx_x ^ buffer[idx_x]), idx_y + byte_counter, 0xFF)
-            buffer[idx_y] = bit_rotate((buffer[idx_x] ^ byte ^ idx_y ^ buffer[idx_y]), idx_x + byte_counter, 0xFF)
+            prev_x = buffer[idx_x]
+            prev_y = buffer[idx_y]
+
+            buffer[idx_x] = bit_rotate(
+                value=(prev_y ^ byte ^ idx_x ^ prev_x),
+                position=idx_y + byte_counter,
+                bits=8
+            )
+            buffer[idx_y] = bit_rotate(
+                value=(buffer[idx_x] ^ byte ^ idx_y ^ prev_y),
+                position=idx_x + byte_counter,
+                bits=8
+            )
             byte_counter += 1
 
     return buffer.hex()
