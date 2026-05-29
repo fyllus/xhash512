@@ -1,6 +1,19 @@
-
-# envs
+# Environments
 .venv/
+env/
+venv/
 
+# Python Cache
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-"**/__pycache__/\n*.pyc"
+# Build and Distribution
+build/
+dist/
+*.egg-info/
+
+# Linux System Files
+.DS_Store
+.directory
